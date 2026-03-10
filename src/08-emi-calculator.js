@@ -40,10 +40,11 @@
  *   calculateEMI(10000, 0.05, 400)
  *   // First month interest = 500, EMI = 400 < 500, INFINITE LOOP!
  *   // => { months: -1, totalPaid: -1, totalInterest: -1 }
- */
-export function calculateEMI(principal, monthlyRate, emi) {
+ * 
+ */export function calculateEMI(principal, monthlyRate, emi) {
   const invalid = { months: -1, totalPaid: -1, totalInterest: -1 };
 
+  // 1. Validation for positive numbers
   if (
     typeof principal !== "number" || principal <= 0 ||
     typeof monthlyRate !== "number" || monthlyRate <= 0 ||
@@ -52,9 +53,9 @@ export function calculateEMI(principal, monthlyRate, emi) {
     return invalid;
   }
 
-  const firstMonthInterest = principal * monthlyRate;
-
-  if (emi <= firstMonthInterest) {
+  // 2. Infinite Loop Protection
+  // If interest is more than or equal to EMI, the debt never decreases
+  if (emi <= principal * monthlyRate) {
     return invalid;
   }
 
@@ -63,24 +64,31 @@ export function calculateEMI(principal, monthlyRate, emi) {
   let totalPaid = 0;
 
   while (remaining > 0) {
-    const interest = Math.round(remaining * monthlyRate * 100) / 100;
+    months++;
+    
+   
+    const interest = remaining * monthlyRate;
+ 
+    remaining += interest;
 
-    remaining = Math.round((remaining + interest) * 100) / 100;
-
+    
     if (remaining < emi) {
+   
       totalPaid += remaining;
       remaining = 0;
     } else {
+     
       remaining -= emi;
       totalPaid += emi;
     }
+    
 
-    months++;
+    if (remaining < 0.01) remaining = 0;
   }
 
   return {
-    months,
-    totalPaid,
-    totalInterest: totalPaid - principal
+    months: months,
+    totalPaid: Math.round(totalPaid * 100) / 100, // Rounding to 2 decimal places
+    totalInterest: Math.round((totalPaid - principal) * 100) / 100
   };
 }
